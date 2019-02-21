@@ -300,7 +300,8 @@ void OpenDialogCompletion(int chosen,
     if (settings.security_scoped_bookmarks) {
       ReadDialogPathsWithBookmarks(dialog, &paths, &bookmarks);
     } else {
-      ReadDialogPaths(dialog, &paths);
+      // ReadDialogPaths(dialog, &paths);
+      ReadDialogPathsWithBookmarks(dialog, &paths, &bookmarks);
     }
     callback.Run(true, paths, bookmarks);
 #else
