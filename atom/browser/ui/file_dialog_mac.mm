@@ -284,7 +284,7 @@ bool ShowOpenDialog(const DialogSettings& settings,
 
 void OpenDialogCompletion(int chosen,
                           NSOpenPanel* dialog,
-                          const DialogSettings& settings,
+                          bool security_scoped_bookmarks,
                           const OpenDialogCallback& callback) {
   if (chosen == NSFileHandlingPanelCancelButton) {
 #if defined(MAS_BUILD)
@@ -297,11 +297,10 @@ void OpenDialogCompletion(int chosen,
     std::vector<base::FilePath> paths;
 #if defined(MAS_BUILD)
     std::vector<std::string> bookmarks;
-    if (settings.security_scoped_bookmarks) {
+    if (security_scoped_bookmarks) {
       ReadDialogPathsWithBookmarks(dialog, &paths, &bookmarks);
     } else {
-      // ReadDialogPaths(dialog, &paths);
-      ReadDialogPathsWithBookmarks(dialog, &paths, &bookmarks);
+      ReadDialogPaths(dialog, &paths);
     }
     callback.Run(true, paths, bookmarks);
 #else
@@ -325,13 +324,16 @@ void ShowOpenDialog(const DialogSettings& settings,
   if (!settings.parent_window || !settings.parent_window->GetNativeWindow() ||
       settings.force_detached) {
     [dialog beginWithCompletionHandler:^(NSInteger chosen) {
-      OpenDialogCompletion(chosen, dialog, settings, callback);
+      OpenDialogCompletion(chosen, dialog, settings.security_scoped_bookmarks,
+                           callback);
     }];
   } else {
     NSWindow* window = settings.parent_window->GetNativeWindow();
     [dialog beginSheetModalForWindow:window
                    completionHandler:^(NSInteger chosen) {
-                     OpenDialogCompletion(chosen, dialog, settings, callback);
+                     OpenDialogCompletion(chosen, dialog,
+                                          settings.security_scoped_bookmarks,
+                                          callback);
                    }];
   }
 }
@@ -352,7 +354,7 @@ bool ShowSaveDialog(const DialogSettings& settings, base::FilePath* path) {
 
 void SaveDialogCompletion(int chosen,
                           NSSavePanel* dialog,
-                          const DialogSettings& settings,
+                          bool security_scoped_bookmarks,
                           const SaveDialogCallback& callback) {
   if (chosen == NSFileHandlingPanelCancelButton) {
 #if defined(MAS_BUILD)
@@ -364,7 +366,7 @@ void SaveDialogCompletion(int chosen,
     std::string path = base::SysNSStringToUTF8([[dialog URL] path]);
 #if defined(MAS_BUILD)
     std::string bookmark;
-    if (settings.security_scoped_bookmarks) {
+    if (security_scoped_bookmarks) {
       bookmark = GetBookmarkDataFromNSURL([dialog URL]);
     }
     callback.Run(true, base::FilePath(path), bookmark);
@@ -386,13 +388,16 @@ void ShowSaveDialog(const DialogSettings& settings,
   if (!settings.parent_window || !settings.parent_window->GetNativeWindow() ||
       settings.force_detached) {
     [dialog beginWithCompletionHandler:^(NSInteger chosen) {
-      SaveDialogCompletion(chosen, dialog, settings, callback);
+      SaveDialogCompletion(chosen, dialog, settings.security_scoped_bookmarks,
+                           callback);
     }];
   } else {
     NSWindow* window = settings.parent_window->GetNativeWindow();
     [dialog beginSheetModalForWindow:window
                    completionHandler:^(NSInteger chosen) {
-                     SaveDialogCompletion(chosen, dialog, settings, callback);
+                     SaveDialogCompletion(chosen, dialog,
+                                          settings.security_scoped_bookmarks,
+                                          callback);
                    }];
   }
 }
