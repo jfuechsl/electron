@@ -320,20 +320,21 @@ void ShowOpenDialog(const DialogSettings& settings,
   // Duplicate the callback object here since c is a reference and gcd would
   // only store the pointer, by duplication we can force gcd to store a copy.
   __block OpenDialogCallback callback = c;
+  // Capture the value of the security_scoped_bookmarks settings flag
+  // and pass it to the completion handler.
+  bool security_scoped_bookmarks = settings.security_scoped_bookmarks;
 
   if (!settings.parent_window || !settings.parent_window->GetNativeWindow() ||
       settings.force_detached) {
     [dialog beginWithCompletionHandler:^(NSInteger chosen) {
-      OpenDialogCompletion(chosen, dialog, settings.security_scoped_bookmarks,
-                           callback);
+      OpenDialogCompletion(chosen, dialog, security_scoped_bookmarks, callback);
     }];
   } else {
     NSWindow* window = settings.parent_window->GetNativeWindow();
     [dialog beginSheetModalForWindow:window
                    completionHandler:^(NSInteger chosen) {
                      OpenDialogCompletion(chosen, dialog,
-                                          settings.security_scoped_bookmarks,
-                                          callback);
+                                          security_scoped_bookmarks, callback);
                    }];
   }
 }
